@@ -91,6 +91,7 @@ def from_partial_fns(pfns):
             G.add_edge(p, q, label=a)
     return G
 
+
 def random_partial_fn(n):
     pfn = {}
     for i in range(n):
@@ -113,7 +114,7 @@ def random_deterministic_graph_with_props(n, m, props):
 
 def is_irreducible(G):
     return nx.is_strongly_connected(G)
-    
+
 
 class Partition:
     def __init__(self, elements):
@@ -150,7 +151,6 @@ class Partition:
 
         return splits
 
-
     def select_smaller(self, p1, p2):
         if self.part_size(p1) <= self.part_size(p2):
             return p1
@@ -182,28 +182,31 @@ def hopcroft(G, S):
 
     return partition
 
-sink = float("inf")
 
+sink = float("inf")
 def add_sink_vertex(G, sigma=None):
     if sigma is None:
         sigma = alphabet(G)
     G.add_node(sink)
     for q in G:
         ol = out_labels(G, q)
-        for a in sigma.difference(ol):
+        diff = [a for a in sigma if a not in ol]
+        for a in diff:
             G.add_edge(q, sink, label=a)
 
     for a in sigma:
         G.add_edge(sink, sink, label=a)
 
+        
 @contextmanager
 def sink_context(G, sigma=None):
-    Gs = add_sink_vertex(G, sigma)
+    add_sink_vertex(G, sigma)
     try:
         yield
     finally:
         G.remove_node(sink)
 
+        
 def get_follower_equivalences(G):
     with sink_context(G):
         partition = hopcroft(G, [sink])
@@ -212,7 +215,8 @@ def get_follower_equivalences(G):
     del partition.parts[sink_p]
     del partition.part_lookup[sink]
     return partition
-        
+
+
 def is_follower_separated(G):
     partition = get_follower_equivalences(G)
     return all(len(part) == 1 for part in partition.parts.values())
@@ -232,20 +236,29 @@ def pair_shrink_graph(G):
                 S.add_edge(pair, res, label=a)
     return S
 
-def convert_str(w, as_str):
-    if as_str:
-        return "".join(w)
-    else:
-        return w
 
-def get_path_label(G, path, as_str=False):
+def returns_word(f):
+    def decorated(*args, **kwargs):
+        as_str = kwargs.pop("as_str", False)
+        w = f(*args, **kwargs)
+        if as_str:
+            return "".join(w)
+        else:
+            return w
+    return decorated
+
+
+@returns_word
+def get_path_label(G, path):
     label = []
     for p, q in zip(path, islice(path, 1, None)):
         edge = first(G[p][q].values())
         label.append(edge["label"])
-    return convert_str(label, as_str)
+    return label
 
-def extend_to_synchronizing_word(G, w, as_str=False):
+
+@returns_word
+def extend_to_synchronizing_word(G, w):
     S = pair_shrink_graph(G)
     paths = nx.shortest_path(S, target=sink)
     w = list(w)
@@ -257,15 +270,16 @@ def extend_to_synchronizing_word(G, w, as_str=False):
             X = idot(G, X, u)
             w.extend(u)
         else:
-            return Non
-    return convert_str(w, as_str)
+            return None
+    return w
 
 
-def find_synchronizing_word(G, as_str=False):
-    return extend_to_synchronizing_word(G, [], as_str)
+@returns_word
+def find_synchronizing_word(G):
+    return extend_to_synchronizing_word(G, [])
 
 
-def find_synchronizing_word2(G, as_str=False):
+def find_synchronizing_word2(G):
     X = iset(G)
     w = []
     with sink_context(G):
@@ -277,9 +291,7 @@ def find_synchronizing_word2(G, as_str=False):
                 if len(Y) > 1:
                     X = iset(q for q in Y if q != sink)
                     w.extend(u)
-                    break
-            
-                    
+                    break       
     return w
 
 
@@ -333,6 +345,7 @@ def asymmetric_shrink_graph(G, H):
     return S
 
 
+@returns_word
 def find_separating_word(G, H):
     S = asymmetric_shrink_graph(G, H)
     paths = nx.shortest_path(S, target=sink)
@@ -355,6 +368,7 @@ def is_subshift(G, H):
     return find_separating_word(G, H) is None
 
 
+@returns_word
 def find_synchronizing_word_in_component(G, C):
     C_complement = [q for q in G if q not in C]
     G_C = G.subgraph(C).copy()
@@ -376,3 +390,22 @@ def _sync_words_ics(G):
 
 def is_synchronizing(G):
     return all(w is not None for (_, w) in _sync_words_ics(G))
+
+
+def is_label_isomorphic_fs(G, H):
+    pass
+
+
+def find_label_isomorphism_fs(G, H):
+    Gp = nx.relabel_nodes(G, lambda x: (x, 1))
+    Hp = nx.relabel_nodes(H, lambda x: (x, 2))
+    GH = nx.union(Gp, Hp)
+    parts = get_follower_equivalences(GH).parts
+    mapping = {}
+    for part in parts.values():
+        if len(part) != 2:
+            return None
+        (qG, _), (qH, _) = sorted(part, key=lambda x:x[1])
+        mapping[qG] = qH
+
+    return mapping
