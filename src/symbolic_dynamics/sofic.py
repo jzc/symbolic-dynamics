@@ -1,6 +1,6 @@
 import networkx as nx
 from symbolic_dynamics.utils import iset, first
-from itertools import combinations, islice
+from itertools import combinations, islice, product, chain
 import random
 from contextlib import contextmanager
 
@@ -180,12 +180,13 @@ def hopcroft(G, S):
                     smaller = partition.select_smaller(p1, p2)
                     wait_set.add((smaller, b))
 
-    return partition.parts
+    return partition
 
 sink = float("inf")
 
-def add_sink_vertex(G):
-    sigma = alphabet(G)
+def add_sink_vertex(G, sigma=None):
+    if sigma is None:
+        sigma = alphabet(G)
     G.add_node(sink)
     for q in G:
         ol = out_labels(G, q)
@@ -196,8 +197,8 @@ def add_sink_vertex(G):
         G.add_edge(sink, sink, label=a)
 
 @contextmanager
-def sink_context(G):
-    Gs = add_sink_vertex(G)
+def sink_context(G, sigma=None):
+    Gs = add_sink_vertex(G, sigma)
     try:
         yield
     finally:
@@ -206,19 +207,21 @@ def sink_context(G):
 def get_follower_equivalences(G):
     with sink_context(G):
         partition = hopcroft(G, [sink])
-    
-    sink_p = first(k for k, v in partition.items() if sink in v)
-    del partition[sink_p]
+
+    sink_p = partition.part_lookup[sink]
+    del partition.parts[sink_p]
+    del partition.part_lookup[sink]
     return partition
         
 def is_follower_separated(G):
     partition = get_follower_equivalences(G)
-    return all(len(part) == 1 for part in partition.values())
+    return all(len(part) == 1 for part in partition.parts.values())
 
         
 def pair_shrink_graph(G):
     sigma = alphabet(G)
     S = nx.MultiDiGraph()
+    S.add_node(sink)
     for pair in combinations(G, 2):
         pair = iset(pair)
         for a in sigma:
@@ -242,12 +245,11 @@ def get_path_label(G, path, as_str=False):
         label.append(edge["label"])
     return convert_str(label, as_str)
 
-
-def find_synchronizing_word(G, as_str=False):
+def extend_to_synchronizing_word(G, w, as_str=False):
     S = pair_shrink_graph(G)
     paths = nx.shortest_path(S, target=sink)
-    X = iset(G)
-    w = []
+    w = list(w)
+    X = idot(G, G, w)
     while len(X) > 1:
         pq = iset(islice(X, 2))
         if pq in paths:
@@ -255,7 +257,122 @@ def find_synchronizing_word(G, as_str=False):
             X = idot(G, X, u)
             w.extend(u)
         else:
-            return None
+            return Non
     return convert_str(w, as_str)
 
 
+def find_synchronizing_word(G, as_str=False):
+    return extend_to_synchronizing_word(G, [], as_str)
+
+
+def find_synchronizing_word2(G, as_str=False):
+    X = iset(G)
+    w = []
+    with sink_context(G):
+        paths = nx.shortest_path(G, target=sink)
+        while len(X) > 1:
+            for q in X:
+                u = get_path_label(G, paths[q])
+                Y = idot(G, X, u)
+                if len(Y) > 1:
+                    X = iset(q for q in Y if q != sink)
+                    w.extend(u)
+                    break
+            
+                    
+    return w
+
+
+def reduce(G):
+    partition = get_follower_equivalences(G)
+    # convert the parts into iset
+    for k in partition.parts:
+        s = partition.parts[k]
+        partition.parts[k] = iset(s)
+        
+    Gr = nx.MultiDiGraph()
+    for (p, q, a) in G.edges(data="label"):
+        p_set = partition.parts[partition.part_lookup[p]]
+        q_set = partition.parts[partition.part_lookup[q]]
+        # here, we are making sure not to add two edges of the
+        # same label between the same two vertices
+        # I believe follower-separation can be performed on
+        # nondeterministic graphs, but since the only we calculate
+        # follower equivalences is with deterministic graphs,
+        # this check is sufficient
+        if a not in out_labels(Gr, p_set):
+            Gr.add_edge(p_set, q_set, label=a)
+
+    return Gr
+            
+
+def asymmetric_shrink_graph(G, H):
+    sigma = alphabet(G) | alphabet(H)
+    S = nx.MultiDiGraph()
+    S.add_node(sink)
+    with sink_context(H, sigma=sigma):
+        for p, q in product(G, H):
+            if q == sink:
+                continue
+            for a in sigma:
+                res_G = dot(G, p, [a])
+                res_H = dot(H, q, [a])
+                # node in G is alive
+                # (no sink was added to G, which is why we check for None)
+                if res_G is not None:
+                    # node in H is alive
+                    # (sink was added to H, which is why we check for sink)
+                    if res_H != sink:
+                        S.add_edge((p, q), (res_G, res_H), label=a)
+                    # node in H was killed
+                    else:
+                        S.add_edge((p, q), sink, label=a)
+                # otherwise, node in G is killed,
+                # do not add any edge
+                
+    return S
+
+
+def find_separating_word(G, H):
+    S = asymmetric_shrink_graph(G, H)
+    paths = nx.shortest_path(S, target=sink)
+    p = first(G)
+    X = iset(H)
+    w = []
+    while len(X) != 0:
+        q = first(X)
+        if (p, q) in paths:
+            u = get_path_label(S, paths[(p,q)])
+            p = dot(G, p, u)
+            X = idot(H, X, u)
+            w.extend(u)
+        else:
+            return None
+    return w
+
+
+def is_subshift(G, H):
+    return find_separating_word(G, H) is None
+
+
+def find_synchronizing_word_in_component(G, C):
+    C_complement = [q for q in G if q not in C]
+    G_C = G.subgraph(C).copy()
+    G_C_complement = G.subgraph(C_complement).copy()
+    w = find_separating_word(G_C, G_C_complement)
+    if w is None:
+        return None
+
+    return extend_to_synchronizing_word(G_C, w)
+
+
+def _sync_words_ics(G):
+    condensate = nx.condensation(G)
+    initial_components = [iset(C) for (Cp, C) in condensate.nodes(data="members")
+                          if not condensate.in_edges(Cp)]
+    for C in initial_components:
+        yield (C, find_synchronizing_word_in_component(G, C))
+
+
+def is_synchronizing(G):
+    return all(w is not None for (_, w) in _sync_words_ics(G))
