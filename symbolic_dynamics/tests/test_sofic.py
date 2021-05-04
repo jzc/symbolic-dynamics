@@ -187,16 +187,126 @@ def test_add_sink():
     s.add_sink_vertex(G)
     assert s.dot(G, 4, "a") == s.sink
     for i in range(4):
+        assert s.dot(G, i, "a") is not None
         assert s.dot(G, i, "a") != s.sink
 
     G = path(5, "a")
     s.add_sink_vertex(G, sigma=["a", "b"])
     assert s.dot(G, 4, "a") == s.sink
     for i in range(4):
+        assert s.dot(G, i, "a") is not None
         assert s.dot(G, i, "a") != s.sink
     for i in range(5):
         assert s.dot(G, i, "b") == s.sink
     
     G = path(5, "a")
     G.add_edge(4, 4, label="b")
-    # assert 
+    s.add_sink_vertex(G)
+    assert s.dot(G, 4, "b") is not None
+    assert s.dot(G, 4, "b") != s.sink
+    assert s.dot(G, 4, "a") == s.sink
+    for i in range(4):
+        assert s.dot(G, i, "a") is not None
+        assert s.dot(G, i, "a") != s.sink
+        assert s.dot(G, i, "b") == s.sink
+    
+
+def test_get_follower_equivalences():
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 3, label="a")
+    G.add_edge(2, 3, label="a")
+    for i in range(3):
+        G.add_edge(i, i, label="b")
+    partiton = s.get_follower_equivalences(G)
+    assert partiton.part_lookup[1] == partiton.part_lookup[2]
+
+    G = path(5, "a")
+    nx.add_path(G, range(10, 15), label="a")
+    G.add_edge(0, 0, label="b")
+    G.add_edge(4, 4, label="b")
+    G.add_edge(10, 10, label="b")
+    G.add_edge(14, 14, label="b")
+    partiton = s.get_follower_equivalences(G)
+    for i in range(5):
+        assert partiton.part_lookup[i] == partiton.part_lookup[i+10]
+
+
+def test_is_follower_separated():
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 1, label="a")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 1, label="b")
+    assert s.is_follower_separated(G)
+
+
+def test_find_synchronizing_word():
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 1, label="b")
+    assert s.find_synchronizing_word(G) is None
+
+    G.add_edge(1, 1, label="a")
+    w = s.find_synchronizing_word(G)
+    assert w is not None
+    assert len(s.idot(G, G, w)) == 1
+
+
+def test_reduce():
+    G = path(5, "a")
+    nx.add_path(G, range(10, 15), label="a")
+    G.add_edge(0, 0, label="b")
+    G.add_edge(4, 4, label="b")
+    G.add_edge(10, 10, label="b")
+    G.add_edge(14, 14, label="b")
+    Gr = s.reduce(G)
+    assert len(Gr) == 5
+    assert s.is_follower_separated(Gr)
+
+
+def test_find_separating_word():
+    G = nx.MultiDiGraph()
+    nx.add_cycle(G, range(2), label="b")
+    G.add_edge(0, 0, label="a")
+
+    H = nx.MultiDiGraph()
+    nx.add_cycle(H, range(3), label="b")
+    H.add_edge(0, 0, label="a")
+
+    w = s.find_separating_word(G, H)
+    assert w is not None
+    assert len(s.idot(G, G, w)) > 0
+    assert len(s.idot(H, H, w)) == 0
+
+    H = nx.MultiDiGraph()
+    nx.add_cycle(H, range(4), label="b")
+    H.add_edge(0, 0, label="a")
+    assert s.is_subshift(H, G)
+
+
+def test_is_synchronizing():
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 1, label="a")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 2, label="a")
+    assert not s.is_synchronizing(G)
+
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 1, label="c")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 2, label="a")
+    assert s.is_synchronizing(G)
+
+
+def test_is_label_isomorphic():
+    G = nx.MultiDiGraph()
+    nx.add_cycle(G, range(5), label="b")
+    G.add_edge(0, 0, label="a")
+    H = nx.relabel_nodes(G, lambda x: 5-x)
+    assert s.is_follower_separated(G)
+    assert s.is_follower_separated(H)
+    assert s.is_label_isomorphic_fs(G, H)
+    
+    H.add_edge(-1, 0, label="a")
+    H.add_edge(-1, -1, label="b")
+    assert s.is_follower_separated(H)
+    assert not s.is_label_isomorphic_fs(G, H)

@@ -393,7 +393,7 @@ def is_synchronizing(G):
 
 
 def is_label_isomorphic_fs(G, H):
-    pass
+    return find_label_isomorphism_fs(G, H) is not None
 
 
 def find_label_isomorphism_fs(G, H):
