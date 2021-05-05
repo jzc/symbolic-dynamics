@@ -3,6 +3,7 @@ import networkx as nx
 from symbolic_dynamics import sofic as s
 from symbolic_dynamics.sofic import iset
 
+
 def path(n, label):
     G = nx.MultiDiGraph()
     nx.add_path(G, range(n), label=label)
@@ -14,7 +15,7 @@ def test_dot():
         G = path(5, label)
         assert s.dot(G, 0, [label]*4) == 4
         assert s.dot(G, 0, [label]*5) is None
-        
+
 
 def test_idot():
     for label in ["a", "aa"]:
@@ -49,7 +50,7 @@ def test_out_labels():
     assert "c" in ol
     assert "d" not in ol
     assert "e" not in ol
-    
+
 
 def test_essential():
     G = path(5, "a")
@@ -57,7 +58,7 @@ def test_essential():
     s.make_essential(G)
     assert len(G) == 0
     assert s.is_essential(G)
-    
+
     G = path(5, "a")
     G.add_edge(0, 0)
     assert not s.is_essential(G)
@@ -79,7 +80,7 @@ def test_essential():
     s.make_essential(G)
     assert len(G) == 5
     assert s.is_essential(G)
-    
+
 
 def test_deterministic():
     G = path(5, "a")
@@ -96,6 +97,14 @@ def test_deterministic():
 
     G.add_edge(0, 0, label="a")
     assert not s.is_deterministic(G)
+    assert not s.is_fully_deterministic(G)
+
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 2, label="a")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 1, label="b")
+    G.add_edge(2, 1, label="c")
+    assert s.is_deterministic(G)
     assert not s.is_fully_deterministic(G)
 
 
@@ -118,14 +127,14 @@ def test_is_irreducible():
 
 def test_partition():
     partition = s.Partition(range(6))
-    
+
     def invariant():
         return all(e in partition.parts[partition.part_lookup[e]]
                    for e in partition.elements)
 
     assert invariant()
     assert partition.part_count() == 1
-    
+
     partition.split([0])
     assert invariant()
     assert partition.part_count() == 2
@@ -135,21 +144,21 @@ def test_partition():
     assert partition.part_count() == 2
 
     partition.split([1, 2])
-    
+
     assert invariant()
     assert partition.part_count() == 3
 
-    partition.split([2,3])
+    partition.split([2, 3])
     assert invariant()
     assert partition.part_count() == 5
 
-    partition.split([0,1,2,3])
+    partition.split([0, 1, 2, 3])
     assert invariant()
     assert partition.part_count() == 5
 
     assert (set(iset(part) for part in partition.parts.values())
-            == set([iset([0]), iset([1]), iset([2]), iset([3]), iset([4,5])]))
-    
+            == set([iset([0]), iset([1]), iset([2]), iset([3]), iset([4, 5])]))
+
 
 def test_hopcroft():
     G = nx.MultiDiGraph()
@@ -161,7 +170,7 @@ def test_hopcroft():
         G.add_edge(i, i, label="b")
         G.add_edge(i+10, i+10, label="b")
     assert s.is_fully_deterministic(G)
-    
+
     partiton = s.hopcroft(G, [4, 14])
     for i in range(0, 5):
         assert partiton.part_lookup[i] == partiton.part_lookup[i+10]
@@ -198,7 +207,7 @@ def test_add_sink():
         assert s.dot(G, i, "a") != s.sink
     for i in range(5):
         assert s.dot(G, i, "b") == s.sink
-    
+
     G = path(5, "a")
     G.add_edge(4, 4, label="b")
     s.add_sink_vertex(G)
@@ -209,7 +218,7 @@ def test_add_sink():
         assert s.dot(G, i, "a") is not None
         assert s.dot(G, i, "a") != s.sink
         assert s.dot(G, i, "b") == s.sink
-    
+
 
 def test_get_follower_equivalences():
     G = nx.MultiDiGraph()
@@ -305,7 +314,7 @@ def test_is_label_isomorphic():
     assert s.is_follower_separated(G)
     assert s.is_follower_separated(H)
     assert s.is_label_isomorphic_fs(G, H)
-    
+
     H.add_edge(-1, 0, label="a")
     H.add_edge(-1, -1, label="b")
     assert s.is_follower_separated(H)

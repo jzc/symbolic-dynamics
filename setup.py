@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="symbolic-dynamics-jzc", 
+    name="symbolic-dynamics-jzc",
     version="0.0.1",
     author="Justin Cai",
     author_email="jc@justincai.com",
