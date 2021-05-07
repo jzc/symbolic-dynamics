@@ -31,6 +31,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx.ext.autosummary",
+    "numpydoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -57,4 +59,10 @@ html_static_path = ['_static']
 
 intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable/", None),
+}
+
+autosummary_generate = True
+
+html_theme_options = {
+    "page_width": "1200px",
 }

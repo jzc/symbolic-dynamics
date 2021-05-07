@@ -8,10 +8,7 @@ symbolic-dynamics
 
 hello world
 
-.. automodule:: symbolic_dynamics.sofic
-   :members:
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   reference
