@@ -20,7 +20,7 @@ True
 
 Installation
 ------------
-symbolic-dynamics is available on `PyPI <https://pypi.org/>`_. Requires Python 3.9
+symbolic-dynamics is available on `PyPI <https://pypi.org/>`_. Requires Python 3.8
 and above. ::
 
  > pip install symbolic-dynamics

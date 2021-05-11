@@ -101,7 +101,7 @@ def cernys_automata(n):
 
     """
     d = {
-        "a": {0: 1} | {i: i for i in range(1, n)},
+        "a": {**{0: 1}, **{i: i for i in range(1, n)}},
         "b": {i: (i+1) % n for i in range(n)},
     }
     return from_partial_fns(d)

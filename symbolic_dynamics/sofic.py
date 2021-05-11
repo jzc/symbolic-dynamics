@@ -283,7 +283,7 @@ def is_deterministic(G):
     G : labeled graph
 
     Examples
-    -------
+    --------
     >>> G = nx.MultiDiGraph()
     >>> G.add_edge(1, 2, label="a")
     >>> G.add_edge(1, 3, label="b")
@@ -466,7 +466,10 @@ def is_irreducible(G):
     A graph is :dfn:`irreducible` if for any two vertices in `G`,
     there is a path between them. Synonymous with *strongly connected*.
 
-    :param G: a graph
+    Parameters
+    ----------
+    G : graph
+
     """
     return nx.is_strongly_connected(G)
 
