@@ -48,7 +48,7 @@ def dot(G, q, w):
     the transition action of `w` in `G` on `q` is defined to be
     the vertex that path ends at. Otherwise, if there is no such
     path, then the transtion action of `w` in `G` on `q` is
-    defined to be ``None``.
+    defined to be None.
 
     Parameters
     ----------
@@ -80,8 +80,8 @@ def dot(G, q, w):
 
 def idot(G, it, w):
     """Computes the transition action of `w` in `G` on each element
-    of the iterable `it`, returning an :class:`iset` of the non-``None``
-    results.
+    of the iterable `it`, returning an :class:`.iset`
+    of the non-None results.
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ def idot(G, it, w):
 
 
 def is_labeled(G):
-    """Returns ``True`` iff every edge in the graph `G`
+    """Returns True iff every edge in the graph `G`
     has the attribute ``label``.
 
     Parameters
@@ -133,7 +133,7 @@ def is_labeled(G):
 
 
 def alphabet(G):
-    """Returns an :class:`iset` of labels appearing in `G`.
+    """Returns an :class:`.iset` of labels appearing in `G`.
 
     Parameters
     ----------
@@ -174,7 +174,7 @@ def out_labels(G, q):
 
 
 def is_stranded(G, q):
-    """Returns ``True`` iff `q` is stranded in `G`.
+    """Returns True iff `q` is stranded in `G`.
 
     A vertex `q` in `G` is :dfn:`stranded` if there is no
     edge starting at `q` or if there is no edge ending at `q`.
@@ -203,7 +203,7 @@ def is_stranded(G, q):
 
 
 def is_essential(G):
-    """Returns ``True`` iff `G` is essential.
+    """Returns True iff `G` is essential.
 
     A graph `G` is :dfn:`essential` if no vertex is stranded.
 
@@ -273,7 +273,7 @@ def make_essential(G):
 
 
 def is_deterministic(G):
-    """Returns ``True`` iff `G` is deterministic.
+    """Returns True iff `G` is deterministic.
 
     A labeled graph `G` is :dfn:`deterministic` if every
     edge starting at a given vertex is labeled uniquely.
@@ -302,7 +302,7 @@ def is_deterministic(G):
 
 
 def is_fully_deterministic(G):
-    """Returns ``True`` iff `G` is fully deterministic.
+    """Returns True iff `G` is fully deterministic.
 
     A labeled graph `G` is :dfn:`fully deterministic` if
     `G` is deterministic and for every vertex `q` in `G`,
@@ -348,8 +348,8 @@ def from_partial_fns(pfns):
     to be used in the output graph, and the inner dicts represent where the
     edges for a given label are located.
 
-    More specifically, if ``G`` is the result of ``from_partial_fns(pfns)``,
-    then ``G`` has the following property:
+    More specifically, if `G` is the result of ``from_partial_fns(pfns)``,
+    then `G` has the following property:
 
     >>> for (a, pfn) in pfns.items():
     ...     for q in G:
@@ -582,7 +582,7 @@ def get_follower_equivalences(G):
     In a deterministic labeled graph `G`, two vertices `p`
     and `q` are :dfn:`follower-equivalent` if there is no
     word `w` such that ``dot(G, p, w)`` and ``dot(G, q, w)``
-    are not both `None`.
+    are not both None.
 
     Returns a pair of dicts representing a partition of
     `G`, where two states are follower-equivalent iff they
@@ -629,7 +629,7 @@ def get_follower_equivalences(G):
 
 
 def is_follower_separated(G):
-    """Returns ``True`` iff `G` is follower-separated.
+    """Returns True iff `G` is follower-separated.
 
     A deterministic labeled graph `G` if no two distinct
     vertices are follower-equivalant.
