@@ -14,5 +14,5 @@ All the functions listed in the reference are imported into
    :maxdepth: 2
 
    reference/sofic
-   reference/utilscd
+   reference/utils
    reference/graphs

@@ -15,6 +15,6 @@ setuptools.setup(
     url="https://github.com/jzc/symbolic-dynamics",
     packages=["symbolic_dynamics"],
     package_data={"symbolic_dynamics": ["tests/*.py"]},
-    python_requires=">=3.9",
+    python_requires=">=3.8",
     install_requires=["networkx>=2.5"],
 )
