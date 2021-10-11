@@ -332,3 +332,25 @@ def test_subset_construction():
     assert 3 in sd.dot(ssc, iset(G), "011")
     assert 3 not in sd.dot(ssc, iset(G), "01")
     assert 3 not in sd.dot(ssc, iset(G), "0110")
+
+
+def test_is_sft():
+    assert sd.is_sft(sd.rll_shift(4, 10))
+    assert sd.is_sft(sd.golden_mean_shift())
+    assert not sd.is_sft(sd.even_shift())
+
+    # reducible, synchronizing, non-follower-separated
+    # presentation of a sft
+    G = nx.MultiDiGraph()
+    G.add_edge(0, 0, label="a")
+    G.add_edge(0, 2, label="b")
+    G.add_edge(1, 1, label="a")
+    G.add_edge(1, 2, label="b")
+    G.add_edge(2, 3, label="a")
+    G.add_edge(2, 3, label="c")
+    G.add_edge(2, 4, label="b")
+    G.add_edge(3, 3, label="c")
+    G.add_edge(3, 4, label="b")
+    G.add_edge(4, 3, label="a")
+    assert sd.is_sft(G)
+    

@@ -670,10 +670,11 @@ def pair_shrink_graph(G):
         pair = iset(pair)
         for a in sigma:
             res = idot(G, pair, [a])
-            if len(res) > 0:
-                if len(res) == 1:
-                    res = sink
+            if len(res) == 2:
                 S.add_edge(pair, res, label=a)
+            elif len(res) == 1:
+                S.add_edge(pair, sink, label=a)
+
     return S
 
 
@@ -1009,3 +1010,24 @@ def are_shifts_equal_sync(G, H):
     G, H : synchronizing deterministic graphs
     """
     return is_label_isomorphic_fs(reduce(G), reduce(H))
+
+
+def is_sft(G, return_step=False):
+    """Returns True iff the shift presents by `G` is
+    a shift of finite type (SFT).
+
+    Requires `G` to be synchronizing for the return value to be correct.
+
+    Parameters
+    ----------
+    G : synchronizing deterministic presentation
+    """
+    Ghat = reduce(G)
+    Ghat = pair_shrink_graph(Ghat)
+    Ghat.remove_node(sink)
+    res = nx.is_directed_acyclic_graph(Ghat)
+    if return_step:
+        return len(Ghat) if res else None
+    else:
+        return res
+

@@ -59,7 +59,7 @@ def even_shift():
     the even shift.
 
     The :dfn:`even shift` is the subshift of the full {0,1}-shift
-    such that between any two 1's within a point
+    such that between any two successive occurrences of a 1 within a point
     of the subshift, there are an even number of 0's occuring
     between them. Equivalently, the even shift is the 2n-gap shift.
 
@@ -105,3 +105,21 @@ def cernys_automata(n):
         "b": {i: (i+1) % n for i in range(n)},
     }
     return from_partial_fns(d)
+
+def rll_shift(d, k):
+    """Returns the minimal deterministic presentation of
+    the `(d, k)` run-length limited shift.
+
+    The :dfn:`(d,k) run-length limited shift` is the subshift of the
+    full {0,1}-shift such that between any two successive occurrences
+    of a 1 within a point of the subshift, there are at least `d` 0's,
+    but no more than `k` 0's.
+    """
+    assert 1 <= d <= k
+    
+    G = nx.MultiDiGraph()
+    nx.add_path(G, range(k), label="0")
+    G.add_edge(0, 0, label="1")
+    for i in range(d, k):
+        G.add_edge(i, 0, label="1")
+    return G

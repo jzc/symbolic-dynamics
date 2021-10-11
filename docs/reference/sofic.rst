@@ -29,3 +29,4 @@ Sofic shifts
    is_subshift
    is_synchronizing
    are_shifts_equal_sync
+   is_sft
